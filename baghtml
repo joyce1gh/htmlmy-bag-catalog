@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Women's Bag Catalog</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; }
+        h1 { text-align: center; }
+        .product { border: 1px solid #ddd; margin: 10px; padding: 10px; }
+        .product img { max-width: 200px; height: auto; }
+        #productForm { margin-bottom: 20px; }
+        input, textarea { width: 100%; margin-bottom: 10px; }
+        .out-of-stock { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Women's Bag Catalog</h1>
+
+    <div id="productForm">
+        <h2>Add New Product</h2>
+        <input type="text" id="name" placeholder="Product Name" required>
+        <input type="text" id="image" placeholder="Image URL" required>
+        <textarea id="description" placeholder="Product Description" required></textarea>
+        <input type="number" id="price" placeholder="Price" required>
+        <label><input type="checkbox" id="inStock"> In Stock</label>
+        <button onclick="addProduct()">Add Product</button>
+    </div>
+
+    <button onclick="shareCatalog()">Share Entire Catalog</button>
+
+    <div id="productCatalog"></div>
+
+    <script>
+        let products = [];
+
+        function addProduct() {
+            const name = document.getElementById('name').value;
+            const image = document.getElementById('image').value;
+            const description = document.getElementById('description').value;
+            const price = document.getElementById('price').value;
+            const inStock = document.getElementById('inStock').checked;
+
+            if (name && image && description && price) {
+                const product = { name, image, description, price, inStock };
+                products.push(product);
+                displayProducts();
+                clearForm();
+            } else {
+                alert('Please fill in all fields');
+            }
+        }
+
+        function displayProducts() {
+            const catalog = document.getElementById('productCatalog');
+            catalog.innerHTML = '';
+
+            products.forEach((product, index) => {
+                const productDiv = document.createElement('div');
+                productDiv.className = 'product';
+                productDiv.innerHTML = `
+                    <h3>${product.name}</h3>
+                    <img src="${product.image}" alt="${product.name}">
+                    <p>${product.description}</p>
+                    <p>Price: $${product.price}</p>
+                    <p class="${product.inStock ? '' : 'out-of-stock'}">
+                        ${product.inStock ? 'In Stock' : 'Out of Stock'}
+                    </p>
+                    <button onclick="shareProduct(${index})">Share</button>
+                    <button onclick="removeProduct(${index})">Remove</button>
+                `;
+                catalog.appendChild(productDiv);
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('name').value = '';
+            document.getElementById('image').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('price').value = '';
+            document.getElementById('inStock').checked = true;
+        }
+
+        function shareProduct(index) {
+            const product = products[index];
+            const shareLink = `${window.location.href}?product=${encodeURIComponent(JSON.stringify(product))}`;
+            alert(`Share this link: ${shareLink}`);
+        }
+
+        function shareCatalog() {
+            const catalogData = encodeURIComponent(JSON.stringify(products));
+            const shareLink = `${window.location.href}?catalog=${catalogData}`;
+            alert(`Share this link to show the entire catalog: ${shareLink}`);
+        }
+
+        function removeProduct(index) {
+            products.splice(index, 1);
+            displayProducts();
+        }
+
+        // Load products from URL parameter if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const productParam = urlParams.get('product');
+        const catalogParam = urlParams.get('catalog');
+
+        if (productParam) {
+            const sharedProduct = JSON.parse(decodeURIComponent(productParam));
+            products.push(sharedProduct);
+            displayProducts();
+        } else if (catalogParam) {
+            products = JSON.parse(decodeURIComponent(catalogParam));
+            displayProducts();
+        }
+    </script>
+</body>
+</html>
